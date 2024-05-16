@@ -49,7 +49,7 @@ pipeline TreesPipeline {
     -> DataLoader;
 }
 
-// valid stadtteil start with "Furth-"
+// valid stadtteil start with "Furth- "
 constraint valid_stadtteil_format oftype RegexConstraint {
         regex: /^Furth-/;
     }
