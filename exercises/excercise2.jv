@@ -40,7 +40,7 @@ pipeline TreesPipeline {
 
     }
     
-    // Pipe: Build a chain of all the TreesPipeline's blocks
+    // Pipe: Build a chain of all the TreesPipeline's  blocks
     DataExtractor
     -> TreesTextFileInterpreter
     -> CSVInterpreter

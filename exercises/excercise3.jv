@@ -74,7 +74,7 @@ pipeline GoodsPipeline {
         ];
     }
 
-    // Load Goods data into sqlite database (In: Table, Out: None)
+    // Load Goods data into sqlite database  (In: Table, Out: None)
     block GoodsLoader oftype SQLiteLoader {
         table: "goods";
         file: "./goodsTransportedByTrain.sqlite";
