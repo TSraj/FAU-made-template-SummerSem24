@@ -41,7 +41,7 @@ pipeline AirportsPipeline {
         file: "./airports.sqlite";
     }
 
-    // Pipe: Build a chain of all the AirportsPipeline's  blocks
+    // Pipe: Build a chain of all the AirportsPipeline's blocks
     AirportsExtractor
         -> AirportsTextFileInterpreter
         -> AirportsCSVInterpreter

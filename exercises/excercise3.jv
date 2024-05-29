@@ -60,7 +60,7 @@ pipeline GoodsPipeline {
         use: convertUppercaseFebruar;
     }
 
-    // Converts Goods Sheet to Table and dropped unnecessary columns [In: Sheet, Out: Table]
+    // Converts Goods Sheet to Table and dropped unnecessary columns (In: Sheet, Out: Table)
     block GoodsTableInterpreter oftype TableInterpreter {
         header: true;
         columns: [
@@ -74,7 +74,7 @@ pipeline GoodsPipeline {
         ];
     }
 
-    // Load Goods data into sqlite database  (In: Table, Out: None)
+    // Load Goods data into sqlite database (In: Table, Out: None)
     block GoodsLoader oftype SQLiteLoader {
         table: "goods";
         file: "./goodsTransportedByTrain.sqlite";

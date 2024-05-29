@@ -40,7 +40,7 @@ pipeline TreesPipeline {
 
     }
     
-    // Pipe: Build a chain of all the TreesPipeline's  blocks
+    // Pipe: Build a chain of all the TreesPipeline's blocks
     DataExtractor
     -> TreesTextFileInterpreter
     -> CSVInterpreter
@@ -49,7 +49,7 @@ pipeline TreesPipeline {
     -> DataLoader;
 }
 
-// valid stadtteil start with "Furth- "
+// valid stadtteil start with "Furth-"
 constraint valid_stadtteil_format oftype RegexConstraint {
         regex: /^Furth-/;
     }
