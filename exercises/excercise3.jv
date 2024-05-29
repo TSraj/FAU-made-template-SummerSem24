@@ -60,7 +60,7 @@ pipeline GoodsPipeline {
         use: convertUppercaseFebruar;
     }
 
-    // Converts Goods Sheet to Table and dropped unnecessary columns (In: Sheet, Out: Table)
+    // Converts Goods Sheet to Table and dropped unnecessary columns [In: Sheet, Out: Table]
     block GoodsTableInterpreter oftype TableInterpreter {
         header: true;
         columns: [
