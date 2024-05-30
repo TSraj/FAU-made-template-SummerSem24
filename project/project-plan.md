@@ -6,7 +6,7 @@ Impact of Weather & Climate condition on Average Daily Traffic Counts
 ## Summary
 
 <!-- Describe your data science project in max. 5 sentences. -->
-This Methods of Advanced Data Engineering project aims to analyze **the weather and climate conditions of Chicago and its Average Daily Traffic Counts** generated from several automatic counting stations throughout the city Average Daily Traffic(ADT) Counts of vehicles on city street passing through a given location on an average weekday for the city of Chicago. The project will use two open data sources: [DATA.GOV](https://catalog.data.gov/), which contains information on Average Daily Traffic Counts fot the city of Chicago, and [visualcrossing](https://www.visualcrossing.com/), which shares weather and climate data of Chicago for the year 2006. This comprehensive analysis will focus on identifying patterns and trends in Average Daily Traffic in Chicago throughout the year 2006 to assess the Daily Traffic condition in the city. Additionally, this analysis will examine the weather and climate data to find out if Chicago's weather and climate conditions are affecting the daily Traffic counts.
+This Methods of Advanced Data Engineering project aims to analyze **the weather and climate conditions of Chicago and its Average Daily Traffic Counts** generated from several automatic counting stations throughout the city Average Daily Traffic(ADT) Counts of vehicles on city street passing through a given location on an average weekday for the city of Chicago. The project will use two open data sources: [DATA.GOV](https://catalog.data.gov/), which contains information on Average Daily Traffic Counts for the city of Chicago, and [Meteostat](https://meteostat.net/en/), which shares weather and climate data of Chicago for the year 2006. This comprehensive analysis will focus on identifying patterns and trends in Average Daily Traffic in Chicago throughout the year 2006 to assess the Daily Traffic condition in the city. Additionally, this analysis will examine the weather and climate data to find out if Chicago's weather and climate conditions are affecting the daily Traffic counts.
 
 ## Rationale
 
@@ -30,11 +30,11 @@ Overall, the analysis can help alleviate the pains of uncertainty about the emer
 This data source contains Chicago's Average Daily Traffic Counts for the year 2006. This data set contains Traffic Volume Count Location Address, Date of Count, Total Passing Vehicle Volume etc.
 
 ### Datasource2: Weather and Climate Data of Chicago, Year 2006
-* Metadata URL: [https://www.visualcrossing.com/weather/weather-data-services](https://www.visualcrossing.com/weather/weather-data-services)
-* Sample Data URL: [https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/retrievebulkdataset?&key=QRR4QHM7YBZYBLZ68WD8PRFTN&taskId=0fb86a43c6c0bb66baf69a2ce6911efd&zip=false](https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/retrievebulkdataset?&key=QRR4QHM7YBZYBLZ68WD8PRFTN&taskId=0fb86a43c6c0bb66baf69a2ce6911efd&zip=false)
+* Metadata URL: [https://meteostat.net/en/station/72534?t=2006-01-01/2006-12-31](https://meteostat.net/en/station/72534?t=2006-01-01/2006-12-31)
+* Sample Data URL: [https://bulk.meteostat.net/v2/hourly/72534.csv.gz](https://bulk.meteostat.net/v2/hourly/72534.csv.gz)
 * Data Type: CSV
 
-This data source will provide weather and climate data in Chicago for the year 2006. This data set is generated from [visualcrossing](https://www.visualcrossing.com/). This data set includes datetime,tempmax, tempmin, humidity, snow, windspeeed, visibility, cloud cover etc.
+This data source will provide weather and climate data in Chicago for the year 2006. This data set is generated from [Meteostat](https://meteostat.net/en/). This data set includes datetime,tempmax, tempmin, humidity, snow, windspeeed, visibility, cloud cover etc.
 
 ## Work Packages
 

@@ -1,135 +1,130 @@
-#### PLEASE READ README.md FILE BEFORE RUNNING ####
-
-import opendatasets as od
-import os
-import sqlite3
-import gdown
+# import libraries
 import pandas as pd
+import sqlite3
 import requests
+import io
+import gzip
 from io import BytesIO
-import numpy as np
-import pyarrow.parquet as pq
+import os
 
+def fetch_data(url, compressed=False):
+    print(f"Fetching data from {url}...")
+    response = requests.get(url)
+    if compressed:
+        print("Decompressing data...")
+        return gzip.decompress(response.content)
+    else:
+        return response.content.decode('utf-8')
 
-class data_pipeline():
-    # Creates DataFrames for the both datasets and calls all the functions required
-    def __init__(self):
-        print("Starting The Pipepline... ")
-        self.weather_df=None
-        self.traffic_df=None
-
-        self.Download_CSV_Files()
-
-
-        #Cleaning Weather DataSet
-        self.weather_df=self.weather_df.drop(columns=['tempmax','tempmin','feelslikemax', 'feelslikemin', 'humidity', 'precipprob', 'precipcover', 'preciptype', 'windgust', 'winddir', 'sealevelpressure', 'cloudcover', 'solarradiation', 'solarenergy', 'uvindex', 'severerisk', 'moonphase', 'conditions', 'description', 'icon', 'stations'])
-        self.weather_df=self.General_Cleaning(self.weather_df)
-
-
-        #Cleaning Average_Daily_Traffic_Counts DataSet
-        self.traffic_df=self.traffic_df.drop(columns=['Location'])
-        self.traffic_df=self.General_Cleaning(self.traffic_df)
-
-        #Making SQLITE files
-        self.Create_Dimention_Tables()
-        print("All Tasks Completed! ")
-        
-    def Create_Dimention_Tables(self):
-        #Creating Weather Table (Dimention)
-        weather_df= pd.DataFrame()
-        weather_df['datetime']=self.weather_df['datetime'].unique()
-        weather_df = pd.merge(weather_df, self.weather_df[['name','datetime', 'temp', 'feelslike', 'dew', 'precip', 'snow', 'snowdepth', 'visibility', 'sunrise', 'sunset']], on='datetime', how='left')
-        self.Create_SQL_Table('Weather',weather_df,'datetime')
-        del weather_df
-        
-        #Creating Average_Daily_Traffic_Counts Table (Dimention)
-        traffic_df= pd.DataFrame()
-        traffic_df['Street']=self.traffic_df['Street'].unique()
-        traffic_df = pd.merge(traffic_df, self.traffic_df[['Street','Latitude','Longitude']], on='Street', how='left')
-        traffic_df = traffic_df.drop_duplicates(subset='Street')
-        self.Create_SQL_Table('Traffic',traffic_df,'Street')
-        del traffic_df
+def save_to_sqlite(df, db_path, table_name):
+    print(f"Saving data to {table_name} table in {db_path}...")
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
     
-    # Creates the SQL Table and places it in the /data directory
-    def Create_SQL_Table(self,table_name, x_dataframe, primary_key=None, foreign_key=None, foreign_key_dif=None,foreign_key_table=None):
-        print(f"Creating an SQLite table for {table_name}, please wait...")
-        sql_type_mapping = {'int64': 'INT', 'float64': 'FLOAT', 'object': 'VARCHAR(255)', 'bool': 'BOOLEAN', 'datetime64[us]': 'TEXT', 'category': 'VARCHAR(255)'}
-        current_dir = os.getcwd()
-        data_dir = os.path.join(os.path.dirname(current_dir), 'data')
-        os.makedirs(data_dir, exist_ok=True)
-        db_path = os.path.join(data_dir, 'MADE.sqlite')
-        
-        # Check if the database already exists and remove it if it does
-        if os.path.exists(db_path):  # CHANGE START: Check for existing database file
-            os.remove(db_path)      # CHANGE: Remove existing database file
-            
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        if primary_key is not None:
-            create_table_query = f"CREATE TABLE IF NOT EXISTS {table_name} ({primary_key} {sql_type_mapping[x_dataframe[primary_key].dtype.name]} PRIMARY KEY, "
-        else:
-            create_table_query = f"CREATE TABLE IF NOT EXISTS {table_name} ("
-        create_table_query += ', '.join([f"{col} {sql_type_mapping[x_dataframe[col].dtype.name]}" for col in x_dataframe.columns if col != primary_key])
-        if foreign_key is not None:
-            num_of_fk=len(foreign_key)
-            create_table_query +=", "
-            for iii in range(0,num_of_fk):
-                create_table_query += f"FOREIGN KEY ({foreign_key[iii]}) REFERENCES {foreign_key_table[iii]}({foreign_key_dif[iii]})"
-                if(num_of_fk>1 and iii<num_of_fk-1):
-                    create_table_query +=","
-        create_table_query += ")"
-        print(create_table_query)
-        cursor.execute(create_table_query)
-        # Insert data into the table
-        if primary_key is not None:
-            for index, row in x_dataframe.iterrows():
-                insert_query = f"INSERT INTO {table_name} VALUES ({', '.join(['?' for _ in range(len(row))])})"
-                cursor.execute(insert_query, tuple(row))
-        else:
-            for index, row in x_dataframe.iterrows():
-                insert_query = f"INSERT INTO {table_name} VALUES ({', '.join(['?' for _ in range(len(row))])})"
-                cursor.execute(insert_query, tuple(row))
-
-        conn.commit()
-        conn.close()
+    # Create table without auto-incremented primary key
+    if table_name == 'traffic':
+        cursor.execute(f"""
+        CREATE TABLE IF NOT EXISTS {table_name} (
+            id INTEGER PRIMARY KEY,
+            month TEXT,
+            traffic INTEGER
+        );
+        """)
+    elif table_name == 'weather':
+        cursor.execute(f"""
+        CREATE TABLE IF NOT EXISTS {table_name} (
+            id INTEGER PRIMARY KEY,
+            month TEXT,
+            tavg REAL,
+            snow REAL,
+            prcp REAL,
+            wspd REAL
+        );
+        """)
     
-    # Cleans data by removing none values and duplicates
-    def General_Cleaning(self,x_dataframe):
-        print(f"Cleaning DataFrame. Please wait...")
-        x_dataframe=x_dataframe.dropna()
-        x_dataframe=x_dataframe.drop_duplicates()
-        print('DataFrame Cleaned!')
-        return x_dataframe
-        
-    # Downloads the CSV files from their Respective URLs
-    def Download_CSV_Files(self):
-        
-        # Weather
-        weather_csv = 'Chicago 2006-01-01 to 2006-12-31.csv'
-        if not os.path.exists(weather_csv):
-            dataset_url = 'https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/retrievebulkdataset?&key=QRR4QHM7YBZYBLZ68WD8PRFTN&taskId=0fb86a43c6c0bb66baf69a2ce6911efd&zip=false'
-            od.download(dataset_url)
-            self.weather_df = pd.read_csv(weather_csv)
-            print("Weather file downloaded and loaded successfully.")
-        else:
-            self.weather_df = pd.read_csv(weather_csv)
-            print("Weather file already exists. Skipping download.")
+    # Insert data into table
+    for row in df.itertuples(index=False):
+        if table_name == 'traffic':
+            cursor.execute(f"""
+            INSERT INTO {table_name} (month, traffic) VALUES (?, ?)
+            """, (row.month, row.traffic))
+        elif table_name == 'weather':
+            cursor.execute(f"""
+            INSERT INTO {table_name} (month, tavg, snow, prcp, wspd) VALUES (?, ?, ?, ?, ?)
+            """, (row.month, row.tavg, row.snow, row.prcp, row.wspd))
+    
+    conn.commit()
+    conn.close()
 
-        # Traffic
-        traffic_csv = 'Average_Daily_Traffic_Counts.csv'
-        if not os.path.exists(traffic_csv):
-            dataset_url = 'http://data.cityofchicago.org/api/views/pfsx-4n4m/rows.csv'
-            od.download(dataset_url)
-            self.traffic_df = pd.read_csv(traffic_csv)
-            print("Traffic file downloaded and loaded successfully.")
-        else:
-            self.traffic_df = pd.read_csv(traffic_csv)
-            print("Library file already exists. Skipping download.")
-        
+# Transform Traffic Data
+def transform_traffic_data(data):
+    print("Transforming traffic data...")
+    # Read the CSV data
+    df = pd.read_csv(io.StringIO(data))
+    
+    # Ensure that the 'Date of Count' column is in datetime format
+    df['Date of Count'] = pd.to_datetime(df['Date of Count'])
+    
+    # Extract month from the 'Date of Count' column
+    df['month'] = df['Date of Count'].dt.strftime('%b').str.upper()
+    
+    # Group by month and sum the 'Total Passing Vehicle Volume'
+    monthly_data = df.groupby('month')['Total Passing Vehicle Volume'].sum().reset_index()
+    
+    # Create a DataFrame with all months
+    all_months = pd.DataFrame({
+        'month': ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 
+                  'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+    })
+    
+    # Merge the grouped data with all months to ensure all months are present
+    monthly_data = all_months.merge(monthly_data, on='month', how='left')
+    
+    # Fill NaN values with 0 (for months with no data)
+    monthly_data['Total Passing Vehicle Volume'].fillna(0, inplace=True)
+    
+    # Rename columns to match the desired output
+    monthly_data.columns = ['month', 'traffic']
+    
+    return monthly_data
 
+# Transform Weather Data
+def transform_weather_data(data):
+    print("Transforming weather data...")
+    selected_columns = [0, 3, 4, 5, 8]
+    df = pd.read_csv(BytesIO(data), header=None, usecols=selected_columns)
+    df.columns = ['date', 'tavg', 'snow', 'prcp', 'wspd']
+    df['date'] = pd.to_datetime(df['date'])
+    df_2006 = df[df['date'].dt.year == 2006]
+    df_2006 = df_2006.dropna()
+    df_2006['month'] = df_2006['date'].dt.strftime('%b')
+    monthly_avg = df_2006.groupby('month').mean().reset_index()
+    months_order = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    monthly_avg['month'] = pd.Categorical(monthly_avg['month'], categories=months_order, ordered=True)
+    monthly_avg = monthly_avg.sort_values('month')
+    monthly_avg = monthly_avg.drop(columns=['date'], errors='ignore')
+    monthly_avg[['tavg', 'snow', 'prcp', 'wspd']] = monthly_avg[['tavg', 'snow', 'prcp', 'wspd']].round(2)
+    return monthly_avg
 
 def main():
-    test_run = data_pipeline()
+    # Ensure the ../data directory exists
+    os.makedirs('../data', exist_ok=True)
+    
+    db_path = '../data/MADE.sqlite'
+    
+    # Process Traffic data
+    traffic_url = "http://data.cityofchicago.org/api/views/pfsx-4n4m/rows.csv"
+    traffic_data = fetch_data(traffic_url)
+    traffic_df = transform_traffic_data(traffic_data)
+    save_to_sqlite(traffic_df, db_path, 'traffic')
+    print("Monthly traffic data for the year 2006 has been saved to SQLite database.")
+    
+    # Process weather data
+    weather_url = "https://bulk.meteostat.net/v2/hourly/72534.csv.gz"
+    weather_data = fetch_data(weather_url, compressed=True)
+    weather_df = transform_weather_data(weather_data)
+    save_to_sqlite(weather_df, db_path, 'weather')
+    print("Monthly averaged data for the year 2006 has been saved to SQLite database.")
 
 if __name__ == "__main__":
     main()
