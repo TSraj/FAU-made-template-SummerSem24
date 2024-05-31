@@ -34,7 +34,7 @@ This data source contains Chicago's Average Daily Traffic Counts for the year 20
 * Sample Data URL: [https://bulk.meteostat.net/v2/hourly/72534.csv.gz](https://bulk.meteostat.net/v2/hourly/72534.csv.gz)
 * Data Type: CSV
 
-This data source will provide weather and climate data in Chicago for the year 2006. This data set is generated from [Meteostat](https://meteostat.net/en/). This data set includes datetime,tempmax, tempmin, humidity, snow, windspeeed, visibility, cloud cover etc.
+This data source will provide weather and climate data in Chicago for the year 2006. This data set is generated from [Meteostat](https://meteostat.net/en/). This data set includes datetime,tempmax, tempmin, humidity, snow, windspeed, visibility, cloud cover etc.
 
 ## Work Packages
 
