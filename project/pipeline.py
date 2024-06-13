@@ -1,4 +1,3 @@
-# import libraries
 import pandas as pd
 import sqlite3
 import requests
@@ -7,8 +6,8 @@ import gzip
 from io import BytesIO
 import os
 
-def fetch_data(url, compressed=False):
-    print(f"Fetching data from {url}...")
+def retrieve_data(url, compressed=False):
+    print(f"Retrieving data from {url}...")
     response = requests.get(url)
     if compressed:
         print("Decompressing data...")
@@ -16,13 +15,12 @@ def fetch_data(url, compressed=False):
     else:
         return response.content.decode('utf-8')
 
-def save_to_sqlite(df, db_path, table_name):
-    print(f"Saving data to {table_name} table in {db_path}...")
-    conn = sqlite3.connect(db_path)
+def store_in_sqlite(df, database_path, table_name):
+    print(f"Storing data in {table_name} table in {database_path}...")
+    conn = sqlite3.connect(database_path)
     cursor = conn.cursor()
     
-    
-    if table_name == 'traffic':
+    if table_name == 'traffic_data':
         cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS {table_name} (
             id INTEGER PRIMARY KEY,
@@ -30,104 +28,86 @@ def save_to_sqlite(df, db_path, table_name):
             traffic INTEGER
         );
         """)
-    elif table_name == 'weather':
+    elif table_name == 'weather_data':
         cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS {table_name} (
             id INTEGER PRIMARY KEY,
             month TEXT,
-            tavg REAL,
-            snow REAL,
-            prcp REAL,
-            wspd REAL
+            avg_temp REAL,
+            snowfall REAL,
+            precipitation REAL,
+            wind_speed REAL
         );
         """)
     
-  
-  
     for row in df.itertuples(index=False):
-        if table_name == 'traffic':
+        if table_name == 'traffic_data':
             cursor.execute(f"""
             INSERT INTO {table_name} (month, traffic) VALUES (?, ?)
             """, (row.month, row.traffic))
-        elif table_name == 'weather':
+        elif table_name == 'weather_data':
             cursor.execute(f"""
-            INSERT INTO {table_name} (month, tavg, snow, prcp, wspd) VALUES (?, ?, ?, ?, ?)
-            """, (row.month, row.tavg, row.snow, row.prcp, row.wspd))
+            INSERT INTO {table_name} (month, avg_temp, snowfall, precipitation, wind_speed) VALUES (?, ?, ?, ?, ?)
+            """, (row.month, row.avg_temp, row.snowfall, row.precipitation, row.wind_speed))
     
     conn.commit()
     conn.close()
 
-
-def transform_traffic_data(data):
-    print("Transforming traffic data...")
-    # Read the CSV data
+def process_traffic_data(data):
+    print("Processing traffic data...")
     df = pd.read_csv(io.StringIO(data))
     
-    
     df['Date of Count'] = pd.to_datetime(df['Date of Count'])
-    
-   
     df['month'] = df['Date of Count'].dt.strftime('%b').str.upper()
     
+    monthly_totals = df.groupby('month')['Total Passing Vehicle Volume'].sum().reset_index()
     
-    monthly_data = df.groupby('month')['Total Passing Vehicle Volume'].sum().reset_index()
-    
-    # Create a DataFrame with all month
-    all_months = pd.DataFrame({
+    all_months_df = pd.DataFrame({
         'month': ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 
                   'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
     })
     
+    monthly_totals = all_months_df.merge(monthly_totals, on='month', how='left')
+    monthly_totals['Total Passing Vehicle Volume'].fillna(0, inplace=True)
+    monthly_totals.columns = ['month', 'traffic']
     
-    monthly_data = all_months.merge(monthly_data, on='month', how='left')
-    
-    
-    monthly_data['Total Passing Vehicle Volume'].fillna(0, inplace=True)
-    
-    
-    monthly_data.columns = ['month', 'traffic']
-    
-    return monthly_data
+    return monthly_totals
 
-
-def transform_weather_data(data):
-    print("Transforming weather data...")
+def process_weather_data(data):
+    print("Processing weather data...")
     selected_columns = [0, 3, 4, 5, 8]
     df = pd.read_csv(BytesIO(data), header=None, usecols=selected_columns)
-    df.columns = ['date', 'tavg', 'snow', 'prcp', 'wspd']
+    df.columns = ['date', 'avg_temp', 'snowfall', 'precipitation', 'wind_speed']
     df['date'] = pd.to_datetime(df['date'])
     df_2006 = df[df['date'].dt.year == 2006]
     df_2006 = df_2006.dropna()
-    df_2006['month'] = df_2006['date'].dt.strftime('%b')
+    df_2006['month'] = df_2006['date'].dt.strftime('%b').str.upper()
+    
     monthly_avg = df_2006.groupby('month').mean().reset_index()
-    months_order = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    months_order = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
     monthly_avg['month'] = pd.Categorical(monthly_avg['month'], categories=months_order, ordered=True)
     monthly_avg = monthly_avg.sort_values('month')
     monthly_avg = monthly_avg.drop(columns=['date'], errors='ignore')
-    monthly_avg[['tavg', 'snow', 'prcp', 'wspd']] = monthly_avg[['tavg', 'snow', 'prcp', 'wspd']].round(2)
+    monthly_avg[['avg_temp', 'snowfall', 'precipitation', 'wind_speed']] = monthly_avg[['avg_temp', 'snowfall', 'precipitation', 'wind_speed']].round(2)
+    
     return monthly_avg
 
 def main():
-    
     os.makedirs('../data', exist_ok=True)
     
-    db_path = '../data/MADE.sqlite'
-    
+    database_path = '../data/MADE.sqlite'
     
     traffic_url = "http://data.cityofchicago.org/api/views/pfsx-4n4m/rows.csv"
-    traffic_data = fetch_data(traffic_url)
-    traffic_df = transform_traffic_data(traffic_data)
-    save_to_sqlite(traffic_df, db_path, 'traffic')
-    print("Monthly traffic data for the year 2006 has been saved to SQLite database.")
-    
-    
+    traffic_data = retrieve_data(traffic_url)
+    traffic_df = process_traffic_data(traffic_data)
+    store_in_sqlite(traffic_df, database_path, 'traffic_data')
+    print("Monthly traffic data for the year 2006 has been saved to the SQLite database.")
     
     weather_url = "https://bulk.meteostat.net/v2/hourly/72534.csv.gz"
-    weather_data = fetch_data(weather_url, compressed=True)
-    weather_df = transform_weather_data(weather_data)
-    save_to_sqlite(weather_df, db_path, 'weather')
-    print("Monthly averaged data for the year 2006 has been saved to SQLite database.")
+    weather_data = retrieve_data(weather_url, compressed=True)
+    weather_df = process_weather_data(weather_data)
+    store_in_sqlite(weather_df, database_path, 'weather_data')
+    print("Monthly averaged weather data for the year 2006 has been saved to the SQLite database.")
     
-
 if __name__ == "__main__":
     main()
