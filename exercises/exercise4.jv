@@ -1,35 +1,38 @@
-  pipeline WeatherPipeline {
+  pipeline TemperatureDataPipeline {
   
-  block WeatherExtractor oftype HttpExtractor {
+  block TemperatureDataExtractor oftype HttpExtractor {
     url: "https://www.mowesta.com/data/measure/mowesta-dataset-20221107.zip";
   }
   
-  block ZipInterpreter oftype ArchiveInterpreter {
+  block ZipFileInterpreter oftype ArchiveInterpreter {
     archiveType: "zip";
   }
   
-  block WeatherFilePicker oftype FilePicker {
+  block TemperatureFilePicker oftype FilePicker {
     path: "/data.csv";
   }
   
-  block WeatherCSVInterpreter oftype CSVInterpreter {
+  block TemperatureFileCSVInterpreter oftype CSVInterpreter {
     delimiter: ';';
   }
   
   block TextInterpreter oftype TextFileInterpreter {}
 
-  block ColDeleter oftype ColumnDeleter {
-    delete: [column F, column G, column H, column I];
-  }
-  
-  block ColDataSelector oftype CellRangeSelector {
+  block CollumDataSelector oftype CellRangeSelector {
     select: range A1:K*;
   }
-  
-    constraint PositiveRange oftype RangeConstraint { lowerBound: 0; lowerBoundInclusive: false;}
-    valuetype PositiveInteger oftype integer { constraints: [ PositiveRange ]; }
+    constraint PositiveRange oftype RangeConstraint { 
+      lowerBound: 0; lowerBoundInclusive: false;
+  }
+    valuetype PositiveInteger oftype integer { 
+      constraints: [ PositiveRange ]; 
+  }
 
-  block WeatherTableInterpreter oftype TableInterpreter {
+  block CollumDeleter oftype ColumnDeleter {
+    delete: [column F, column G, column H, column I];
+  }
+
+  block TemperatureDataTableInterpreter oftype TableInterpreter {
     header: false;
     columns: [
       "id" oftype PositiveInteger,
@@ -50,36 +53,30 @@
   block TransformerA oftype TableTransformer {
     inputColumns: ['temperature'];
     outputColumn: 'temperature';
-    use: TempConvert;  // Using the defined transformation
+    use: TempConvert;  
   }
 
-  
+ block WeatherDataLoader oftype SQLiteLoader {
+    table: "temperatures";
+    file: "./temperatures.sqlite";
+    dropTable: false;
+  }
 
   block TransformerB oftype TableTransformer {
     inputColumns: ['battery_temperature'];
     outputColumn: 'battery_temperature';
     use: TempConvert;  
   }
-
   
-  block WeatherLoader oftype SQLiteLoader {
-    table: "temperatures";
-    file: "./temperatures.sqlite";
-    dropTable: false;
-  }
-
-
-
-  
-  WeatherExtractor
-  -> ZipInterpreter
-  -> WeatherFilePicker
+  TemperatureDataExtractor
+  -> ZipFileInterpreter
+  -> TemperatureFilePicker
   -> TextInterpreter
-  -> WeatherCSVInterpreter
-  -> ColDataSelector
-  -> ColDeleter
-  -> WeatherTableInterpreter
+  -> TemperatureFileCSVInterpreter
+  -> CollumDataSelector
+  -> CollumDeleter
+  -> TemperatureDataTableInterpreter
   -> TransformerA
   -> TransformerB
-  -> WeatherLoader;
+  -> WeatherDataLoader;
 }
