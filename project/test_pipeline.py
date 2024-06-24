@@ -2,7 +2,7 @@ import unittest
 import os
 import sqlite3
 # from pipeline import main  # Adjust the import as per your file structure
-from project.pipeline import execute_pipeline
+from project.pipeline import main
 
 class TestDataPipeline(unittest.TestCase):
 
