@@ -2,50 +2,87 @@
 
 ![](https://byob.yarr.is/TSraj/FAU-made-template-SummerSem24/score_ex1) ![](https://byob.yarr.is/TSraj/FAU-made-template-SummerSem24/score_ex2) ![](https://byob.yarr.is/TSraj/FAU-made-template-SummerSem24/score_ex3) ![](https://byob.yarr.is/TSraj/FAU-made-template-SummerSem24/score_ex4) ![](https://byob.yarr.is/TSraj/FAU-made-template-SummerSem24/score_ex5)
 
-# Methods of Advanced Data Engineering Template Project
+# Methods of Advanced Data Engineering Project
 
-This template project provides some structure for your open data project in the MADE module at FAU.
-This repository contains (a) a data science project that is developed by the student over the course of the semester, and (b) the exercises that are submitted over the course of the semester.
-Before you begin, make sure you have [Python](https://www.python.org/) and [Jayvee](https://github.com/jvalue/jayvee) installed. We will work with [Jupyter notebooks](https://jupyter.org/). The easiest way to do so is to set up [VSCode](https://code.visualstudio.com/) with the [Jupyter extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter).
+# Impact of Weather and Climate Conditions on Average Daily Traffic Counts in Chicago (2006)
 
-To get started, please follow these steps:
-1. Create your own fork of this repository. Feel free to rename the repository right after creation, before you let the teaching instructors know your repository URL. **Do not rename the repository during the semester**.
-2. Setup the exercise feedback by changing the exercise badge sources in the `README.md` file following the patter `![](https://byob.yarr.is/<github-user-name>/<github-repo>/score_ex<exercise-number>)`. 
-For example, if your user is _myuser_ and your repo is _myrepo_, then update the badge for _exercise 1_ to `![](https://byob.yarr.is/myrepo/myuser/score_ex1)`. Proceed with the remaining badges accordingly.
+## Project Overview
 
+This project investigates the major impact of weather and climate conditions on average daily traffic counts in the city of Chicago for the year 2006. The analysis aims to uncover how different weather parameters such as temperature, precipitation, snowfall, and wind speed influence traffic volume on a monthly basis. The findings can have significant implications for emergency travelers, public health, and environmental awareness.
 
-## Project Work
-Your data engineering project will run alongside lectures during the semester. We will ask you to regularly submit project work as milestones so you can reasonably pace your work. All project work submissions **must** be placed in the `project` folder.
+## Table of Contents
+- [Introduction](#introduction)
+- [Data Source](#data-source)
+- [Data Pipeline](#data-pipeline)
+- [Analysis](#analysis)
+- [Results](#results)
+- [Conclusion](#conclusion)
+- [Usage](#usage)
+- [Contact](#contact)
 
-### Exporting a Jupyter Notebook
-Jupyter Notebooks can be exported using `nbconvert` (`pip install nbconvert`). For example, to export the example notebook to html: `jupyter nbconvert --to html examples/final-report-example.ipynb --embed-images --output final-report.html`
+## Introduction
 
+The primary question addressed in this project is: **What is the major impact of weather and climate conditions on average daily traffic counts?**
 
-## Exercises
-During the semester you will need to complete exercises using [Jayvee](https://github.com/jvalue/jayvee). You **must** place your submission in the `exercises` folder in your repository and name them according to their number from one to five: `exercise<number from 1-5>.jv`.
+Understanding this relationship is crucial for:
+- **Emergency Travelers**: Helping them make informed decisions to avoid heavily impacted routes.
+- **Public Health Awareness**: Highlighting the health risks associated with prolonged exposure to heavy traffic.
+- **Environmental Impact**: Demonstrating the contribution of traffic to air pollution and raising awareness for necessary actions.
 
-In regular intervalls, exercises will be given as homework to complete during the semester. Details and deadlines will be discussed in the lecture, also see the [course schedule](https://made.uni1.de/). At the end of the semester, you will therefore have the following files in your repository:
+## Data Source
 
-1. `./exercises/exercise1.jv`
-2. `./exercises/exercise2.jv`
-3. `./exercises/exercise3.jv`
-4. `./exercises/exercise4.jv`
-5. `./exercises/exercise5.jv`
+The data for this analysis was collected from two sources:
+1. **Traffic Data**: City of Chicago traffic data for the year 2006, obtained from [data.cityofchicago.org](http://data.cityofchicago.org/api/views/pfsx-4n4m/rows.csv).
+2. **Weather Data**: Weather data for Chicago in 2006, sourced from [Meteostat](https://bulk.meteostat.net/v2/hourly/72534.csv.gz).
 
-### Exercise Feedback
-We provide automated exercise feedback using a GitHub action (that is defined in `.github/workflows/exercise-feedback.yml`). 
+The traffic data includes the total passing vehicle volume on a monthly basis, while the weather data includes monthly averages of temperature, precipitation, snowfall, and wind speed.
 
-To view your exercise feedback, navigate to Actions -> Exercise Feedback in your repository.
+## Data Pipeline
 
-The exercise feedback is executed whenever you make a change in files in the `exercise` folder and push your local changes to the repository on GitHub. To see the feedback, open the latest GitHub Action run, open the `exercise-feedback` job and `Exercise Feedback` step. You should see command line output that contains output like this:
+The data pipeline involves the following steps:
 
-```sh
-Found exercises/exercise1.jv, executing model...
-Found output file airports.sqlite, grading...
-Grading Exercise 1
-	Overall points 17 of 17
-	---
-	By category:
-		Shape: 4 of 4
-		Types: 13 of 13
-```
+1. **Retrieve Data**: Download traffic and weather data from their respective sources.
+2. **Process Data**: Clean and preprocess the data to extract relevant information.
+3. **Store Data**: Save the processed data into a SQLite database for easy access and analysis.
+4. **Merge Data**: Combine the traffic and weather data into a single dataset for comprehensive analysis.
+
+The detailed pipeline can be found in the `pipeline.py` file in this repository.
+
+## Analysis
+
+The analysis involves examining the relationship between traffic volume and weather conditions through various visualizations:
+- **Traffic Counts Over Time**: Line graph showing monthly traffic counts.
+- **Weather Conditions Over Time**: Line graphs for average temperature, precipitation, and snowfall.
+- **Traffic vs. Weather Conditions**: Bar graphs showing the relationship between traffic counts and each weather variable.
+- **Correlation Analysis**: Scatter plots with trend lines to show the correlation between traffic counts and individual weather variables.
+- **Correlation Matrix**: Heatmap displaying the correlation coefficients between all pairs of variables.
+- **Seasonal Analysis**: Violin plots showing traffic volume distribution across different seasons.
+
+## Results
+
+The results of the analysis provide insights into how weather conditions affect traffic volume. Key findings include:
+- Significant decrease in traffic volume during months with high snowfall and precipitation.
+- Strong correlation between average temperature and traffic volume, with higher traffic observed in warmer months.
+- Seasonal patterns indicating higher traffic in summer months compared to winter months.
+
+## Conclusion
+
+The analysis concludes that weather and climate conditions have a substantial impact on average daily traffic counts in Chicago. Emergency travelers can benefit from this information to avoid critical routes, and public health awareness can be raised regarding the effects of heavy traffic. Additionally, understanding the impact of traffic on air pollution can drive efforts to mitigate environmental issues.
+
+## Usage
+
+To replicate this analysis, follow these steps:
+1. Clone this repository: `git clone https://github.com/yourusername/impact-of-weather-on-traffic.git`
+2. Navigate to the project directory: `cd impact-of-weather-on-traffic`
+3. Install the required packages: `pip install -r requirements.txt`
+4. Run the data pipeline: `python pipeline.py`
+5. Generate the visualizations: `python analysis.py`
+
+The visualizations will be saved in the `output` directory.
+
+## Contact
+
+For any questions or feedback, please contact:
+- **Name**: [MD TANVER SADIK RAJ]
+- **Email**: [ tanvirraj475@gmail.com]
+- **GitHub**: [https://github.com/TSraj]
