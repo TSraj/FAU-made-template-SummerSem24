@@ -10,7 +10,7 @@
 
 This project investigates the major impact of weather and climate conditions on average daily traffic counts in the city of Chicago for the year 2006. The analysis aims to uncover how different weather parameters such as temperature, precipitation, snowfall, and wind speed influence traffic volume on a monthly basis. The findings can have significant implications for emergency travelers, public health, and environmental awareness.
 
-## Project Structure
+<!-- ## Project Structure
 
 Impact-of-Weather-on-Traffic/
 │
@@ -42,7 +42,7 @@ Impact-of-Weather-on-Traffic/
 ├── .gitignore
 ├── README.md
 ├── requirements.txt
-└── LICENSE
+└── LICENSE -->
 
 
 ## Table of Contents
